@@ -51,7 +51,7 @@ to:
 
 The brackets on lines 13,14 were changed to parens.
 
-- Build.bat contains: /LIBPATH:"C:\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.20348.0\\um\\x86"
+- `build.bat` contains: /LIBPATH:"C:\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.20348.0\\um\\x86"
   You may need to change to fit your system: /LIBPATH:"...\\Windows Kits\\10\\Lib\\(your version)\\um\\x86"
 - You need to have Crinkler installed in a directory that has been added to PATH.
   Example: C:\utils\Crinkler.exe
@@ -87,7 +87,7 @@ The whole menu bar is assembled at startup in `CreateNotepadMenus`:
   string draws the separator lines, which avoids carrying a separate separator
   call.
 - Every menu label lives as a packed `db` string (`MFile`, `MNew`, `MOpen`, etc.) and every command is a constant ID (`IDM_FILE_OPEN`, `IDM_EDIT_FIND`, …). `SetMenu` attaches the finished bar to the main window.
-- The same IDs power the right-click context menu via `TrackPopupMenu`, so the   context menu costs almost nothing extra.
+- The same IDs power the right-click context menu via `TrackPopupMenu`, so the context menu costs almost nothing extra.
 
 The classic `Save` item is appended onto the window's **system menu** with
 `GetSystemMenu`/`AppendMenuA`, which is why it arrives as a `WM_SYSCOMMAND` instead of a `WM_COMMAND`.
@@ -109,7 +109,7 @@ file picker:
 - **Open** (`PickOpenFile`) and **Save As** (`PickSaveFile`) call
   `GetOpenFileNameA` / `GetSaveFileNameA` with a single all-files filter and store the chosen path in `CmdFile`. Open then reuses the existing `LoadStartupFile` path that the drag-and-drop launch already used.
 - Loading/saving the actual bytes goes through `CreateFileA`, `GetFileSize`, `GlobalAlloc`, `ReadFile`/`WriteFile`, and `CloseHandle` — the same plumbing the original drop-file editor used, now shared by the menus.
-- A `fDirty` flag (set on `EN_CHANGE`) drives the title-bar `*` and the `MaybeSaveChanges` "Save changes?" prompt that New / Open / Exit run before   discarding the buffer.
+- A `fDirty` flag (set on `EN_CHANGE`) drives the title-bar `*` and the `MaybeSaveChanges` "Save changes?" prompt that New / Open / Exit run before discarding the buffer.
 
 ### File: Page Setup and Print
 
