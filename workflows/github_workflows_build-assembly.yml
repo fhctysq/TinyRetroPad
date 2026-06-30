@@ -1,0 +1,73 @@
+name: Build Assembly Project
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup MASM
+        run: |
+          # MASM is included with Visual Studio Build Tools
+          echo "MASM is available in Visual Studio environment"
+      
+      - name: Setup Crinkler
+        run: |
+          # Download and setup Crinkler
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri "https://www.crinkler.net/download/crinkler-2-3.zip" -OutFile "crinkler.zip"
+          Expand-Archive -Path "crinkler.zip" -DestinationPath "C:\crinkler"
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\crinkler"
+          Remove-Item "crinkler.zip"
+        shell: powershell
+      
+      - name: Build Assembly Project
+        run: |
+          # Get the Windows SDK version dynamically
+          $sdkPath = "C:\Program Files (x86)\Windows Kits\10\Lib"
+          $sdkVersion = (Get-ChildItem $sdkPath -Directory | Sort-Object Name -Descending | Select-Object -First 1).Name
+          
+          # Compile assembly to object file
+          ml /nologo /c /coff /Cp /I"C:\masm32\include" trpad.asm
+          
+          # Link with Crinkler
+          crinkler trpad.obj `
+            /OUT:trpad.exe `
+            /ENTRY:MainEntry `
+            /SUBSYSTEM:WINDOWS `
+            /NOINITIALIZERS `
+            /TINYIMPORT `
+            /ORDERTRIES:2000 `
+            /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\$sdkVersion\um\x86" `
+            kernel32.lib user32.lib shell32.lib comdlg32.lib gdi32.lib
+          
+          # Cleanup object file
+          Remove-Item trpad.obj
+        shell: powershell
+      
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trpad-executable
+          path: trpad.exe
+          retention-days: 30
+      
+      - name: Display build info
+        run: |
+          if (Test-Path "trpad.exe") {
+            $fileInfo = Get-Item "trpad.exe"
+            Write-Host "✓ Build successful!"
+            Write-Host "  Executable: trpad.exe"
+            Write-Host "  Size: $($fileInfo.Length) bytes"
+          } else {
+            Write-Host "✗ Build failed - trpad.exe not found"
+            exit 1
+          }
+        shell: powershell
